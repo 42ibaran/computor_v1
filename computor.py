@@ -1,25 +1,15 @@
 import re
 import sys
 import math
-# import argparse
+import argparse
 
 from customErrors import *
 from messages import *
-
-# parser = argparse.ArgumentParser()
-# parser.add_argument("EQUATION", type=str, help='equation in strict or natural form')
-# parser.add_argument("-p")
-
-# args = parser.parse_args()
 
 # TODO
 # 1. Manage floats without extra decimal places
 
 powerCoefficients = {}
-
-def checkInput():
-    if len(sys.argv) != 2:
-        raise UsageError()
 
 # Regex groups indexes
 # 0 - full match
@@ -31,9 +21,9 @@ def checkInput():
 # 6 - X (None = X^0)
 # 7 - power of X (None = 1)
 
-def executeRegex():
+def executeRegex(equation):
     r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(\.\d+)?)(?:\*)?)?(?:(X)?(?:\^([+-]?\d+))?)?", re.I)
-    argument = sys.argv[1].replace(' ', '')
+    argument = equation.replace(' ', '')
     unmatched = r.sub('', argument)
     halfIsMissing = (argument[0] == '=' or argument[-1] == '=')
 
@@ -113,6 +103,8 @@ def solveDegree1():
     print("The solution is:", x, sep="\n")
 
 def solveDegree2():
+    if 1 not in powerCoefficients:
+        powerCoefficients[1] = 0
     discriminant = (powerCoefficients[1] ** 2) - 4 * powerCoefficients[0] * powerCoefficients[2]
     discriminantString = "Discriminant = %s" % (discriminant)
     if discriminant > 0:
@@ -141,14 +133,14 @@ def solve():
     else:
         print(DEGREE_TOO_HIGH)
 
-try:
-    checkInput()
-except UsageError:
-    print(USAGE)
-    exit(1)
+parser = argparse.ArgumentParser()
+parser.add_argument("equation", metavar="Equation", type=str)
+parser.add_argument("-p", metavar="Precision", type=int)
+
+args = parser.parse_args()
 
 try:
-    iterator = executeRegex()
+    iterator = executeRegex(args.equation)
     simplify(iterator)
 except MalformedEquationError:
     print(MALFORMED_EQUATION)
