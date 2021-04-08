@@ -14,9 +14,15 @@ from messages import *
 # 1. Manage floats without extra decimal places: 1-0.77
 # 2. Equation starting with -
 # 3. Check if sign parsing is tots ok 
+# spaces between numbers = error
+# check reduced form again
+# think about +- and -+
+# complex numbers - VERIFY
 
 INPUT_PRECISION = 12
 outputPrecision = 10
+
+handleImaginary = False
 
 powerCoefficients = {0:0.0}
 
@@ -156,8 +162,15 @@ def solveDegree2():
         x = outputRound(x)
         print(discriminantString, x, sep="\n")
     else:
-        discriminantString += ", strictly negative, no real solutions"
-        print(discriminantString)
+        discriminantString += ", strictly negative" + (", no real solutions" if not handleImaginary else ". Complex solutions are:")
+        if handleImaginary:
+            sqrtD = math.sqrt(-discriminant)
+            a = -powerCoefficients[1] / (2 * powerCoefficients[2])
+            b = sqrtD / (2 * powerCoefficients[2])
+            print(discriminantString)
+            print(outputRound(a), " ± ", outputRound(b), "i", sep="")
+        else:
+            print(discriminantString)
 
 def solve():
     degree = getDegree()
@@ -174,11 +187,15 @@ def solve():
 parser = argparse.ArgumentParser(prefix_chars='@')
 parser.add_argument("equation", metavar="equation", type=str, help="Example: " + EQUATION_EXAMPLE)
 parser.add_argument("@p", metavar="precision", type=int, help="precision for result output")
+parser.add_argument("@i", action="store_true", help="handle complex results")
 
 args = parser.parse_args()
 
 if args.p is not None:
-    outputPrecision = args.p 
+    outputPrecision = args.p
+
+if args.i is True:
+    handleImaginary = True
 
 try:
     iterator = executeRegex(args.equation)
