@@ -185,7 +185,7 @@ def solve():
         print(DEGREE_TOO_HIGH)
 
 parser = argparse.ArgumentParser(prefix_chars='@')
-parser.add_argument("equation", metavar="equation", type=str, help="Example: " + EQUATION_EXAMPLE)
+parser.add_argument("equation", metavar="equation", type=str, help="example: " + EQUATION_EXAMPLE)
 parser.add_argument("@p", metavar="precision", type=int, help="precision for result output")
 parser.add_argument("@i", action="store_true", help="handle complex results")
 
