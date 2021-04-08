@@ -13,8 +13,6 @@ from messages import *
 
 # TODO
 # check if sign parsing is tots ok
-# spaces between numbers = error
-# regex that matches any >=1 spaces except if they're between two digits
 # check reduced form again
 # think about +- and -+
 # complex numbers - VERIFY
@@ -42,6 +40,10 @@ def inputRound(value):
 # 6 - power of X (None = 1)
 
 def executeRegex(equation):
+    exceptionRegex = re.compile(r"\d\s+\d")
+    if exceptionRegex.match(equation) is not None:
+        raise MalformedEquationError()
+
     r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(?:\.\d+)?)(?:\*)?)?(?:(X)?(?:\^([+-]?\d+))?)?", re.I)
     argument = equation.replace(' ', '')
     unmatched = r.sub('', argument)
