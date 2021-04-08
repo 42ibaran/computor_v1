@@ -11,10 +11,9 @@ from messages import *
 # Output precision parameter
 
 # TODO
-# 1. Manage floats without extra decimal places: 1-0.77
-# 2. Equation starting with -
-# 3. Check if sign parsing is tots ok 
+# check if sign parsing is tots ok
 # spaces between numbers = error
+# regex that matches any >=1 spaces except if they're between two digits
 # check reduced form again
 # think about +- and -+
 # complex numbers - VERIFY
@@ -26,21 +25,23 @@ handleImaginary = False
 
 powerCoefficients = {0:0.0}
 
+def outputRound(value):
+    return round(value, outputPrecision) if not value.is_integer() and outputPrecision != 0 else round(value)
+
+def inputRound(value):
+    return value if not value.is_integer() else round(value)
+
 # Regex groups indexes
 # 0 - full match
 # 1 - = or None
 # 2 - sign (None = positive)
 # 3 - sign (None = positive)
 # 4 - coefficient (None = 1)
-# 5 - decimal point (None = Int)
-# 6 - X (None = X^0)
-# 7 - power of X (None = 1)
-
-def outputRound(value):
-    return round(value, outputPrecision) if not value.is_integer() and outputPrecision != 0 else round(value)
+# 5 - X (None = X^0)
+# 6 - power of X (None = 1)
 
 def executeRegex(equation):
-    r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(\.\d+)?)(?:\*)?)?(?:(X)?(?:\^([+-]?\d+))?)?", re.I)
+    r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(?:\.\d+)?)(?:\*)?)?(?:(X)?(?:\^([+-]?\d+))?)?", re.I)
     argument = equation.replace(' ', '')
     unmatched = r.sub('', argument)
     isIncomplete = len(argument) == 0 or argument.find("=") == -1 or argument[0] == '=' or argument[-1] == '='
@@ -58,9 +59,8 @@ def simplify(iterator):
         sign1 = match.group(2)
         sign2 = match.group(3)
         coeff = match.group(4)
-        decimal = match.group(5)
-        isX = match.group(6)
-        power = match.group(7)
+        isX = match.group(5)
+        power = match.group(6)
 
         if coeff == None and isX == None:
             raise MalformedEquationError()
@@ -97,18 +97,15 @@ def getDegree():
     return max(degrees)
 
 def printReducedForm():
-    if len(powerCoefficients) == 1 and powerCoefficients[0] == 0:
-        result = "0"
-    else:
-        result = ""
+    result = ""
     for power in range(getDegree() + 1):
-        coefficient = powerCoefficients[power] if power in powerCoefficients else 0
-        printedCoefficient = coefficient if coefficient >= 0.0 else -coefficient
+        coefficient = powerCoefficients[power] if power in powerCoefficients else 0.0
+        printedCoefficient = coefficient if coefficient >= 0 else -coefficient
         if coefficient < 0:
             result += " - " if result != "" else "-"
         else:
             result += " + " if result != "" else ""
-        result += "%s * X^%d" % (printedCoefficient, power)
+        result += "%s * X^%d" % (inputRound(printedCoefficient), power)
     result += ' = 0'
     print("Reduced form: " + result)
 
