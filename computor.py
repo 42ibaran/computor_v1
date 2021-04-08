@@ -9,6 +9,7 @@ from messages import *
 # Support of natural form
 # Irrational result for special case of second degree
 # Output precision parameter
+# Result as complex numbers for D<0
 
 # TODO
 # check if sign parsing is tots ok
