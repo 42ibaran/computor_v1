@@ -2,9 +2,15 @@
 
 ## Usage
 ```
-python computor.py [@h] [@p precision] equation
+python computor.py [@h] [@i] [@p precision] equation
 ```
-The program supports equations in natural form
+
+## Functionality
+Program supports equations in natural form:. You can:
+* Omit coefficients before X
+* Omit X for free coefficients
+* Omit multiplication sign
+* Omit degree of X
 
 The project was tested with python 3.7. Might work with other versions but who knows.
 

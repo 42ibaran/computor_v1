@@ -8,14 +8,8 @@ from messages import *
 # Bonuses:
 # Support of natural form
 # Irrational result for special case of second degree
-# Output precision parameter
-# Result as complex numbers for D<0
-
-# TODO
-# check if sign parsing is tots ok
-# check reduced form again
-# think about +- and -+
-# complex numbers - VERIFY
+# Output precision parameter [@p precision]
+# Result as complex numbers for D<0 [@i]
 
 INPUT_PRECISION = 12
 outputPrecision = 10
@@ -40,11 +34,11 @@ def inputRound(value):
 # 6 - power of X (None = 1)
 
 def executeRegex(equation):
-    exceptionRegex = re.compile(r"\d\s+\d")
-    if exceptionRegex.match(equation) is not None:
+    exceptionRegex = re.compile(r"\d\s+\.?\d")
+    if exceptionRegex.search(equation) is not None:
         raise MalformedEquationError()
 
-    r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(?:\.\d+)?)(?:\*)?)?(?:(X)?(?:\^([+-]?\d+))?)?", re.I)
+    r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(?:\.\d+)?)(?:\*)?)?(?:(X)?(?:\^(\d+))?)?", re.I)
     argument = equation.replace(' ', '')
     unmatched = r.sub('', argument)
     isIncomplete = len(argument) == 0 or argument.find("=") == -1 or argument[0] == '=' or argument[-1] == '='
@@ -124,43 +118,25 @@ def solveDegree1():
         return
     else:
         x = -powerCoefficients[0] / powerCoefficients[1]
-    x = outputRound(x)
-    print("The solution is:", round(x, outputPrecision), sep="\n")
-
-def solveDegree2Special():
-    print(SPECIAL_CASE_DEGREE_2)
-    fraction = -powerCoefficients[0] / powerCoefficients[2]
-    if fraction < 0:
-        print(SOLUTION_IS_NONE)
-        return
-    x = math.sqrt(fraction)
-    print("Solution%s %s:" % (("", "is") if x == 0 else ("s", "are")))
-    if not x.is_integer():
-        print("±√%s" % outputRound(fraction), "or", sep="\n")
-    x = outputRound(x)
-    print("%s%s" % (("" if x == 0 else "±"), x))
+    print("The solution is:", outputRound(x), sep="\n")
 
 def solveDegree2():
     if 1 not in powerCoefficients:
         powerCoefficients[1] = 0
-        solveDegree2Special()
-        return
 
     discriminant = (powerCoefficients[1] ** 2) - 4 * powerCoefficients[0] * powerCoefficients[2]
     discriminantString = "Discriminant = %s" % outputRound(discriminant)
+
     if discriminant > 0:
         discriminantString += ", strictly positive, the two solutions are:"
         sqrtD = math.sqrt(discriminant)
         x1 = (-powerCoefficients[1] + sqrtD) / (2 * powerCoefficients[2])
         x2 = (-powerCoefficients[1] - sqrtD) / (2 * powerCoefficients[2])
-        x1 = outputRound(x1)
-        x2 = outputRound(x2)
-        print(discriminantString, x1, x2, sep="\n")
+        print(discriminantString, outputRound(x1), outputRound(x2), sep="\n")
     elif discriminant == 0:
         discriminantString += ", is zero, one solution:"
         x = -powerCoefficients[1] / (2 * powerCoefficients[2])
-        x = outputRound(x)
-        print(discriminantString, x, sep="\n")
+        print(discriminantString, outputRound(x), sep="\n")
     else:
         discriminantString += ", strictly negative" + (", no real solutions" if not handleImaginary else ". Complex solutions are:")
         if handleImaginary:
@@ -186,12 +162,15 @@ def solve():
 
 parser = argparse.ArgumentParser(prefix_chars='@')
 parser.add_argument("equation", metavar="equation", type=str, help="example: " + EQUATION_EXAMPLE)
-parser.add_argument("@p", metavar="precision", type=int, help="precision for result output")
 parser.add_argument("@i", action="store_true", help="handle complex results")
+parser.add_argument("@p", metavar="precision", type=int, help="precision for result output (>=0)")
 
 args = parser.parse_args()
 
 if args.p is not None:
+    if args.p < 0:
+        parser.print_help()
+        exit(1)
     outputPrecision = args.p
 
 if args.i is True:
