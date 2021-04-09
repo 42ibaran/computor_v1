@@ -9,6 +9,7 @@ from messages import *
 # Support of natural form
 # Output precision parameter [@p precision]
 # Result as complex numbers for D<0 [@i]
+# Repeating degrees
 
 MAX_DEGREE = 100
 INPUT_PRECISION = 12
