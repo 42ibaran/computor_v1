@@ -2,7 +2,7 @@
 
 ## Usage
 ```
-python3.7 computor.py [@h] [@p precision] equation
+python computor.py [@h] [@p precision] equation
 ```
 Program supports equations in natural form
 
