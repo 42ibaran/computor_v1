@@ -2,7 +2,7 @@ import re
 import math
 import argparse
 
-from customErrors import MalformedEquationError
+from customErrors import MalformedEquationError, DegreeTooHighError
 from messages import *
 
 # Bonuses:
@@ -10,6 +10,7 @@ from messages import *
 # Output precision parameter [@p precision]
 # Result as complex numbers for D<0 [@i]
 
+MAX_DEGREE = 100
 INPUT_PRECISION = 12
 outputPrecision = 10
 
@@ -33,19 +34,18 @@ def inputRound(value):
 # 6 - power of X (None = 1)
 
 def executeRegex(equation):
-    exceptionRegex = re.compile(r"\d\s+\.?\d")
-    if exceptionRegex.search(equation) is not None:
+    if re.search(r"\d\s+\.?\d", equation):
         raise MalformedEquationError()
+    equation = re.sub(r"\s", '', equation)
 
     r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(?:\.\d+)?)(?:\*)?)?(?:(X)?(?:\^(\d+))?)?", re.I)
-    argument = equation.replace(' ', '')
-    unmatched = r.sub('', argument)
-    isIncomplete = len(argument) == 0 or argument.find("=") == -1 or argument[0] == '=' or argument[-1] == '='
+    unmatched = r.sub('', equation)
+    isIncomplete = len(equation) == 0 or equation.find("=") == -1 or equation[0] == '=' or equation[-1] == '='
 
     if len(unmatched) != 0 or isIncomplete:
         raise MalformedEquationError()
 
-    iterator = r.finditer(argument)
+    iterator = r.finditer(equation)
     return iterator
 
 def simplify(iterator):
@@ -93,8 +93,13 @@ def getDegree():
     return max(degrees)
 
 def printReducedForm():
+    degree = getDegree()
+
+    if degree > MAX_DEGREE:
+        raise DegreeTooHighError()
+
     result = ""
-    for power in range(getDegree() + 1):
+    for power in range(degree + 1):
         coefficient = powerCoefficients[power] if power in powerCoefficients else 0.0
         printedCoefficient = coefficient if coefficient >= 0 else -coefficient
         if coefficient < 0:
@@ -157,7 +162,7 @@ def solve():
     elif degree == 2:
         solveDegree2()
     else:
-        print(DEGREE_TOO_HIGH)
+        print(DEGREE_GREATER_2)
 
 parser = argparse.ArgumentParser(prefix_chars='@')
 parser.add_argument("equation", metavar="equation", type=str, help="example: " + EQUATION_EXAMPLE)
@@ -182,5 +187,10 @@ except MalformedEquationError:
     print(MALFORMED_EQUATION)
     exit(1)
 
-printReducedForm()
+try:
+    printReducedForm()
+except DegreeTooHighError:
+    print(DEGREE_TOO_HIGH)
+    exit(1)
+
 solve()

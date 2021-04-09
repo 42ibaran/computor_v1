@@ -4,3 +4,6 @@ class Error(Exception):
 
 class MalformedEquationError(Error):
     pass
+
+class DegreeTooHighError(Error):
+    pass
