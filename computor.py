@@ -7,14 +7,13 @@ from messages import *
 
 # Bonuses:
 # Support of natural form
-# Irrational result for special case of second degree
 # Output precision parameter [@p precision]
 # Result as complex numbers for D<0 [@i]
 
 INPUT_PRECISION = 12
 outputPrecision = 10
 
-handleImaginary = False
+handleComplex = False
 
 powerCoefficients = {0:0.0}
 
@@ -138,8 +137,8 @@ def solveDegree2():
         x = -powerCoefficients[1] / (2 * powerCoefficients[2])
         print(discriminantString, outputRound(x), sep="\n")
     else:
-        discriminantString += ", strictly negative" + (", no real solutions" if not handleImaginary else ". Complex solutions are:")
-        if handleImaginary:
+        discriminantString += ", strictly negative" + (", no real solutions" if not handleComplex else ". Complex solutions are:")
+        if handleComplex:
             sqrtD = math.sqrt(-discriminant)
             a = -powerCoefficients[1] / (2 * powerCoefficients[2])
             b = sqrtD / (2 * powerCoefficients[2])
@@ -174,7 +173,7 @@ if args.p is not None:
     outputPrecision = args.p
 
 if args.i is True:
-    handleImaginary = True
+    handleComplex = True
 
 try:
     iterator = executeRegex(args.equation)
