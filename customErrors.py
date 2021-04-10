@@ -1,9 +1,5 @@
-class Error(Exception):
-    """Base Error class"""
+class MalformedEquationError(Exception):
     pass
 
-class MalformedEquationError(Error):
-    pass
-
-class DegreeTooHighError(Error):
+class DegreeTooHighError(Exception):
     pass

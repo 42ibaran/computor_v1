@@ -1,9 +1,7 @@
 import re
-import math
 import argparse
 
-from customErrors import MalformedEquationError, DegreeTooHighError
-from messages import *
+from customErrors import *
 
 # Bonuses:
 # Support of natural form
@@ -11,7 +9,10 @@ from messages import *
 # Result as complex numbers for D<0 [@i]
 # Repeating degrees
 
+EQUATION_EXAMPLE = """1 * X + 5X^1 + 9.3 * X^2 = -5"""
+
 MAX_DEGREE = 100
+SQRT_MAX_ITER = 60
 INPUT_PRECISION = 12
 outputPrecision = 10
 
@@ -25,6 +26,19 @@ def outputRound(value):
 def inputRound(value):
     return value if not value.is_integer() else round(value)
 
+def sqrt(n, min=0, max=0, iter=0):
+    if n < 0:
+        raise ValueError("Cannot solve square root of a negative number.")
+    if max == 0 and n != 0:
+        max = n / 2 + 1
+    middle = (max - min) / 2 + min
+    if iter > SQRT_MAX_ITER or middle * middle == n:
+        return middle
+    elif middle * middle > n:
+        return sqrt(n, min=min, max=middle, iter=(iter + 1))
+    else:
+        return sqrt(n, min=middle, max=max, iter=(iter + 1))
+
 # Regex groups indexes
 # 0 - full match
 # 1 - = or None
@@ -36,15 +50,17 @@ def inputRound(value):
 
 def executeRegex(equation):
     if re.search(r"\d\s+\.?\d", equation):
-        raise MalformedEquationError()
+        raise MalformedEquationError("Equation contains whitespaces inside numeric values.")
     equation = re.sub(r"\s", '', equation)
 
-    r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(?:\.\d+)?)(?:\*)?)?(?:(X)?(?:\^(\d+))?)?", re.I)
+    r = re.compile(r"(?:(?:(?:^|(=))([+-])?)|([+-]))(?:((?:\d+)(?:\.\d+)?)(?:\*)?)?(?:(X)?(?:\^?(\d+))?)?", re.I)
     unmatched = r.sub('', equation)
     isIncomplete = len(equation) == 0 or equation.find("=") == -1 or equation[0] == '=' or equation[-1] == '='
 
-    if len(unmatched) != 0 or isIncomplete:
-        raise MalformedEquationError()
+    if len(unmatched) != 0:
+        raise MalformedEquationError("Equation contsins syntax errors.")
+    elif isIncomplete:
+        raise MalformedEquationError("Equation is empty or incomplete.")
 
     iterator = r.finditer(equation)
     return iterator
@@ -59,26 +75,28 @@ def simplify(iterator):
         isX = match.group(5)
         power = match.group(6)
 
-        if coeff == None and isX == None:
-            raise MalformedEquationError()
+        if (coeff is None and isX is None) or (coeff is not None and isX is None and power is not None):
+            raise MalformedEquationError("A member of the polynomial is invalid.")
 
-        if equal != None:
+        if equal is not None:
             if isLeft:
                 isLeft = False
             else:
-                raise MalformedEquationError()
+                raise MalformedEquationError("Equation contains multiple equal signs.")
 
         sign = sign1 or sign2
-        sign = '+' if sign == None else sign
+        sign = '+' if sign is None else sign
         isPositive = True if (sign == '+' and isLeft == True) or (sign == '-' and isLeft == False) else False
 
-        isFreeCoefficient = True if isX == None else False
+        isFreeCoefficient = True if isX is None else False
         if not isFreeCoefficient:
-            powerOfX = int(power) if power != None else 1
+            powerOfX = int(power) if power is not None else 1
         else:
             powerOfX = 0
         
-        coefficient = float(coeff) if coeff != None else 1.0
+        coefficient = float(coeff) if coeff is not None else 1.0
+        if coefficient == float("inf"):
+            raise ValueError("One of provided coefficients is too big or too small.")
         coefficient *= 1 if isPositive else -1
 
         if powerOfX not in powerCoefficients:
@@ -97,7 +115,7 @@ def printReducedForm():
     degree = getDegree()
 
     if degree > MAX_DEGREE:
-        raise DegreeTooHighError()
+        raise DegreeTooHighError("Degree of provided equation is too high to print reduced form or solve.")
 
     result = ""
     for power in range(degree + 1):
@@ -113,9 +131,9 @@ def printReducedForm():
 
 def solveDegree0():
     if powerCoefficients[0] == 0:
-        print(SOLUTION_IS_ALL)
+        print("Solution is every real number.")
     else:
-        print(SOLUTION_IS_NONE)
+        print("Equation has no solution.")
 
 def solveDegree1():
     if powerCoefficients[1] == 0:
@@ -134,7 +152,7 @@ def solveDegree2():
 
     if discriminant > 0:
         discriminantString += ", strictly positive, the two solutions are:"
-        sqrtD = math.sqrt(discriminant)
+        sqrtD = sqrt(discriminant)
         x1 = (-powerCoefficients[1] + sqrtD) / (2 * powerCoefficients[2])
         x2 = (-powerCoefficients[1] - sqrtD) / (2 * powerCoefficients[2])
         print(discriminantString, outputRound(x1), outputRound(x2), sep="\n")
@@ -145,7 +163,7 @@ def solveDegree2():
     else:
         discriminantString += ", strictly negative" + (", no real solutions" if not handleComplex else ". Complex solutions are:")
         if handleComplex:
-            sqrtD = math.sqrt(-discriminant)
+            sqrtD = sqrt(-discriminant)
             a = -powerCoefficients[1] / (2 * powerCoefficients[2])
             b = sqrtD / (2 * powerCoefficients[2])
             print(discriminantString)
@@ -163,7 +181,7 @@ def solve():
     elif degree == 2:
         solveDegree2()
     else:
-        print(DEGREE_GREATER_2)
+        raise DegreeTooHighError("The polynomial degree is greater than 2, I can't solve.")
 
 parser = argparse.ArgumentParser(prefix_chars='@')
 parser.add_argument("equation", metavar="equation", type=str, help="example: " + EQUATION_EXAMPLE)
@@ -174,8 +192,7 @@ args = parser.parse_args()
 
 if args.p is not None:
     if args.p < 0:
-        parser.print_help()
-        exit(1)
+        parser.error("Precision value cannot be negative")
     outputPrecision = args.p
 
 if args.i is True:
@@ -184,14 +201,13 @@ if args.i is True:
 try:
     iterator = executeRegex(args.equation)
     simplify(iterator)
-except MalformedEquationError:
-    print(MALFORMED_EQUATION)
+except (MalformedEquationError, ValueError) as e:
+    print(e)
     exit(1)
 
 try:
     printReducedForm()
-except DegreeTooHighError:
-    print(DEGREE_TOO_HIGH)
+    solve()
+except DegreeTooHighError as e:
+    print(e)
     exit(1)
-
-solve()
