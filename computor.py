@@ -212,7 +212,7 @@ if args.p is not None:
         parser.error("Precision value cannot be negative")
     outputPrecision = args.p
 
-if args.i is True:
+if args.i == True:
     handleComplex = True
 
 try:
