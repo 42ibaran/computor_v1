@@ -13,6 +13,6 @@ Program supports equations in natural form:. You can:
 * Omit degree of X
 * Omit ^ sign
 
-The project was tested with python 3.7. Might work with other versions but who knows.
+The project was tested with python >3.7. Might work with other versions but who knows.
 
 For more information refer to the [subject](https://cdn.intra.42.fr/pdf/pdf/13223/en.subject.pdf)

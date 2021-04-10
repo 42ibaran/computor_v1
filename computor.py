@@ -1,10 +1,11 @@
 import re
 import argparse
+import logging as log
 
 from customErrors import *
 
 # Bonuses:
-# Support of natural form
+# Support of free form
 # Output precision parameter [@p precision]
 # Result as complex numbers for D<0 [@i]
 # Repeating degrees
@@ -12,27 +13,37 @@ from customErrors import *
 EQUATION_EXAMPLE = """1 * X + 5X^1 + 9.3 * X^2 = -5"""
 
 MAX_DEGREE = 100
-SQRT_MAX_ITER = 60
-INPUT_PRECISION = 12
+SQRT_MAX_ITER = 70
+WARN_INPUT_COEFF_LEN = 11
+MAX_OUTPUT_COEFF_LEN = 11
+INPUT_PRECISION = 14
 outputPrecision = 10
 
 handleComplex = False
 
 powerCoefficients = {0:0.0}
 
+log.basicConfig(format='%(levelname)s: %(message)s', level=log.WARN)
+
 def outputRound(value):
-    return round(value, outputPrecision) if not value.is_integer() and outputPrecision != 0 else round(value)
+    value = value if not value.is_integer() and outputPrecision != 0 else round(value)
+    return round(value, outputPrecision) if len(str(int(value))) <= MAX_OUTPUT_COEFF_LEN and (fabs(value) > 0.1 ** outputPrecision or value == 0) else format(value, ".%de" % outputPrecision)
 
 def inputRound(value):
-    return value if not value.is_integer() else round(value)
+    value = value if not value.is_integer() else round(value)
+    return round(value, INPUT_PRECISION) if len(str(int(value))) <= MAX_OUTPUT_COEFF_LEN and (fabs(value) > 0.1 ** INPUT_PRECISION or value == 0) else format(value, ".%de" % outputPrecision)
+
+def fabs(n):
+    return -n if n < 0 else n
 
 def sqrt(n, min=0, max=0, iter=0):
     if n < 0:
         raise ValueError("Cannot solve square root of a negative number.")
     if max == 0 and n != 0:
-        max = n / 2 + 1
+        max = n // 2 + 1
     middle = (max - min) / 2 + min
-    if iter > SQRT_MAX_ITER or middle * middle == n:
+    accuracyIncrease = len(str(n))
+    if iter > SQRT_MAX_ITER + accuracyIncrease or middle * middle == n:
         return middle
     elif middle * middle > n:
         return sqrt(n, min=min, max=middle, iter=(iter + 1))
@@ -93,10 +104,13 @@ def simplify(iterator):
             powerOfX = int(power) if power is not None else 1
         else:
             powerOfX = 0
+
+        if len(coeff) > WARN_INPUT_COEFF_LEN:
+            log.warning("One of provided coefficients is long, solution(s) might be inaccurate.")
         
         coefficient = float(coeff) if coeff is not None else 1.0
         if coefficient == float("inf"):
-            raise ValueError("One of provided coefficients is too big or too small.")
+            raise ValueError("One of provided coefficients is infinity, can't solve.")
         coefficient *= 1 if isPositive else -1
 
         if powerOfX not in powerCoefficients:
@@ -151,11 +165,14 @@ def solveDegree2():
     discriminantString = "Discriminant = %s" % outputRound(discriminant)
 
     if discriminant > 0:
-        discriminantString += ", strictly positive, the two solutions are:"
         sqrtD = sqrt(discriminant)
         x1 = (-powerCoefficients[1] + sqrtD) / (2 * powerCoefficients[2])
         x2 = (-powerCoefficients[1] - sqrtD) / (2 * powerCoefficients[2])
-        print(discriminantString, outputRound(x1), outputRound(x2), sep="\n")
+        discriminantString += ", strictly positive, the two solutions are:"
+        if x1 == -x2:
+            print(discriminantString, "±%s" % outputRound(max(x1, x2)) if x1 != x2 else outputRound(x1), sep="\n")
+        else:
+            print(discriminantString, outputRound(x1), outputRound(x2), sep="\n")
     elif discriminant == 0:
         discriminantString += ", is zero, one solution:"
         x = -powerCoefficients[1] / (2 * powerCoefficients[2])
@@ -202,12 +219,12 @@ try:
     iterator = executeRegex(args.equation)
     simplify(iterator)
 except (MalformedEquationError, ValueError) as e:
-    print(e)
+    log.error(e)
     exit(1)
 
 try:
     printReducedForm()
     solve()
 except DegreeTooHighError as e:
-    print(e)
+    log.error(e)
     exit(1)
