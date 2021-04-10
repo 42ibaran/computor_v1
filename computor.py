@@ -27,11 +27,11 @@ log.basicConfig(format='%(levelname)s: %(message)s', level=log.WARN)
 
 def outputRound(value):
     value = value if not value.is_integer() and outputPrecision != 0 else round(value)
-    return round(value, outputPrecision) if len(str(int(value))) <= MAX_OUTPUT_COEFF_LEN and (fabs(value) > 0.1 ** outputPrecision or value == 0) else format(value, ".%de" % outputPrecision)
+    return round(value, outputPrecision) if len(str(int(value))) <= MAX_OUTPUT_COEFF_LEN and (fabs(value) > 0.1 ** outputPrecision or value == 0) else format(value, ".3e")
 
 def inputRound(value):
     value = value if not value.is_integer() else round(value)
-    return round(value, INPUT_PRECISION) if len(str(int(value))) <= MAX_OUTPUT_COEFF_LEN and (fabs(value) > 0.1 ** INPUT_PRECISION or value == 0) else format(value, ".%de" % outputPrecision)
+    return round(value, INPUT_PRECISION) if len(str(int(value))) <= MAX_OUTPUT_COEFF_LEN and (fabs(value) > 0.1 ** INPUT_PRECISION or value == 0) else format(value, ".3e")
 
 def fabs(n):
     return -n if n < 0 else n
