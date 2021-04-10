@@ -1,6 +1,6 @@
 import re
 import argparse
-import logging as log
+import logging
 
 from customErrors import *
 
@@ -10,20 +10,18 @@ from customErrors import *
 # Output precision parameter [@p precision]
 # Result as complex numbers for D<0 [@i]
 
-EQUATION_EXAMPLE = """1 * X + 5X^1 + 9.3 * X^2 = -5"""
-
 MAX_DEGREE = 100
 SQRT_MAX_ITER = 70
-WARN_INPUT_COEFF_LEN = 11
+WARN_INPUT_COEFF_LEN = 16
 MAX_OUTPUT_COEFF_LEN = 11
-INPUT_PRECISION = 14
+INPUT_PRECISION = 15
 outputPrecision = 10
 
 handleComplex = False
 
 powerCoefficients = {0:0.0}
 
-log.basicConfig(format='%(levelname)s: %(message)s', level=log.WARN)
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.WARN)
 
 def outputRound(value):
     value = value if not value.is_integer() and outputPrecision != 0 else round(value)
@@ -60,7 +58,7 @@ def sqrt(n, min=0, max=0, iter=0):
 # 6 - power of X (None = 1)
 
 def executeRegex(equation):
-    if re.search(r"\d\s+\.?\d", equation):
+    if re.search(r"\d((\.?\s+)|(\s+\.?))\d", equation):
         raise MalformedEquationError("Equation contains whitespaces inside numeric values.")
     equation = re.sub(r"\s", '', equation)
 
@@ -69,7 +67,7 @@ def executeRegex(equation):
     isIncomplete = len(equation) == 0 or equation.find("=") == -1 or equation[0] == '=' or equation[-1] == '='
 
     if len(unmatched) != 0:
-        raise MalformedEquationError("Equation contsins syntax errors.")
+        raise MalformedEquationError("Equation contains syntax errors.")
     elif isIncomplete:
         raise MalformedEquationError("Equation is empty or incomplete.")
 
@@ -105,8 +103,8 @@ def simplify(iterator):
         else:
             powerOfX = 0
 
-        if len(coeff) > WARN_INPUT_COEFF_LEN:
-            log.warning("One of provided coefficients is long, solution(s) might be inaccurate.")
+        if coeff is not None and len(coeff) > WARN_INPUT_COEFF_LEN:
+            logging.warning("A coefficient is long, solution(s) might be inaccurate.")
         
         coefficient = float(coeff) if coeff is not None else 1.0
         if coefficient == float("inf"):
@@ -116,6 +114,8 @@ def simplify(iterator):
         if powerOfX not in powerCoefficients:
             powerCoefficients[powerOfX] = 0
         powerCoefficients[powerOfX] += coefficient
+        if powerCoefficients[powerOfX] == float("inf") or powerCoefficients[powerOfX] == float("-inf"):
+            raise ValueError("During reduction one of the coefficients exceeded maximum value.")
 
     filtered = {x: round(y, INPUT_PRECISION) for x, y in sorted(powerCoefficients.items()) if x == 0 or y != 0}
     powerCoefficients.clear()
@@ -201,7 +201,7 @@ def solve():
         raise DegreeTooHighError("The polynomial degree is greater than 2, I can't solve.")
 
 parser = argparse.ArgumentParser(prefix_chars='@')
-parser.add_argument("equation", metavar="equation", type=str, help="example: " + EQUATION_EXAMPLE)
+parser.add_argument("equation", metavar="equation", type=str, help="example: 1 * X + 5X^1 + 9. 3 * X2 = 5 + X^2")
 parser.add_argument("@i", action="store_true", help="handle complex results")
 parser.add_argument("@p", metavar="precision", type=int, help="precision for result output (>=0)")
 
@@ -219,12 +219,12 @@ try:
     iterator = executeRegex(args.equation)
     simplify(iterator)
 except (MalformedEquationError, ValueError) as e:
-    log.error(e)
+    logging.error(e)
     exit(1)
 
 try:
     printReducedForm()
     solve()
 except DegreeTooHighError as e:
-    log.error(e)
+    logging.error(e)
     exit(1)
