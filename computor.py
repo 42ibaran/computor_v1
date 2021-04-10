@@ -6,9 +6,9 @@ from customErrors import *
 
 # Bonuses:
 # Support of free form
+# Repeating degrees
 # Output precision parameter [@p precision]
 # Result as complex numbers for D<0 [@i]
-# Repeating degrees
 
 EQUATION_EXAMPLE = """1 * X + 5X^1 + 9.3 * X^2 = -5"""
 
