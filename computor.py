@@ -4,12 +4,6 @@ import logging
 
 from customErrors import *
 
-# Bonuses:
-# Support of free form
-# Repeating degrees
-# Output precision parameter [@p precision]
-# Result as complex numbers for D<0 [@i]
-
 MAX_DEGREE = 100
 SQRT_MAX_ITER = 70
 WARN_INPUT_COEFF_LEN = 16
