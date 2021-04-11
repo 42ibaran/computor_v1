@@ -195,7 +195,7 @@ def solve():
         raise DegreeTooHighError("The polynomial degree is greater than 2, I can't solve.")
 
 parser = argparse.ArgumentParser(prefix_chars='@')
-parser.add_argument("equation", metavar="equation", type=str, help="example: 1 * X + 5X^1 + 9. 3 * X2 = 5 + X^2")
+parser.add_argument("equation", metavar="equation", type=str, help="example: 1 * X + 5X^1 + 9.3 * X2 = 5 + X^2")
 parser.add_argument("@i", action="store_true", help="handle complex results")
 parser.add_argument("@p", metavar="precision", type=int, help="precision for result output (>=0)")
 
