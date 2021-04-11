@@ -1,9 +1,9 @@
 # Computor v1
 
 ## Functionality
-The program solves quadratic equations of degrees less than 3.
+The program solves polynomial equations of degrees less than 3.
 
-Program supports equations in natural form:. You can:
+Program supports equations in free form:. You can:
 * Omit coefficients before X
 * Omit X for free coefficients
 * Omit multiplication sign
