@@ -176,7 +176,7 @@ def solveDegree2():
         if handleComplex:
             sqrtD = sqrt(-discriminant)
             a = -powerCoefficients[1] / (2 * powerCoefficients[2])
-            b = sqrtD / (2 * powerCoefficients[2])
+            b = fabs(sqrtD / (2 * powerCoefficients[2]))
             print(discriminantString)
             print(outputRound(a), " ± ", outputRound(b), "i", sep="")
         else:
