@@ -8,7 +8,7 @@ MAX_DEGREE = 100
 SQRT_MAX_ITER = 70
 WARN_INPUT_COEFF_LEN = 16
 MAX_OUTPUT_COEFF_LEN = 11
-INPUT_PRECISION = 15
+INPUT_PRECISION = 13
 outputPrecision = 10
 
 handleComplex = False
@@ -52,7 +52,7 @@ def sqrt(n, min=0, max=0, iter=0):
 # 6 - power of X (None = 1)
 
 def executeRegex(equation):
-    if re.search(r"\d((\.?\s+)|(\s+\.?))\d", equation):
+    if re.search(r"\d((\s*\.?\s+)|(\s+\.?\s*))\d", equation):
         raise MalformedEquationError("Equation contains whitespaces inside numeric values.")
     equation = re.sub(r"\s", '', equation)
 
